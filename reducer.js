@@ -45,11 +45,11 @@ function lineDown() {
 }
 
 function hangUp() {
-  if (phoneState == 'closed') store.lineState = 'hung-up';
+  if (store.phoneState == 'closed') store.lineState = 'hung-up';
   else logger.warn('Cannot set phone hung up when line is not closed');
 }
 
 function offHook() {
-  if (phoneState == 'open') store.lineState = 'off-hook';
+  if (store.phoneState == 'open') store.lineState = 'off-hook';
   else logger.warn('Cannot set phone off-hook when line is not open');
 }
