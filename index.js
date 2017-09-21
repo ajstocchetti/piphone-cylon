@@ -3,7 +3,21 @@ const Cylon = require('cylon');
 const logger = require('./logger');
 const store = require('./reducer');
 
-const pulseTimeout = 300;
+const NS_PER_SEC = 1e9;
+const pulseTimeout = 300; // milliseconds
+const pulseTimeoutNs = pulseTimeout * 1e6; // nanoseconds
+const pulseFinishTimeout = pulseTimeout + 50; // milliseconds
+
+function hrtToNs(hrt) {
+  return ( NS_PER_SEC * hrt[0] ) + hrt[1];
+}
+function diffHrTimes(hrt1, hrt2) {
+  // if hrt1 = earlier, hrt2 = later then nanoseconds will be positive
+  return hrtToNs(hrt2) - hrtToNs(hrt1);
+  // const diff = [hrt2[0] - hrt1[0], hrt2[1] - hrt1[1]];
+  // const nanoseconds = (NS_PER_SEC * diff[0]) + diff[1];
+  // return nanoseconds;
+}
 
 Cylon.robot({
     connections: {
@@ -29,7 +43,7 @@ Cylon.robot({
         // setTimeout(my.led.toggle, 10000)
         //  every((1).second(), my.led.toggle);
 
-        // let lastUp = process.hrtime();
+        let lastUp = process.hrtime();
         let lastDown = null;
         let pulseCount = 0;
 
@@ -43,14 +57,19 @@ Cylon.robot({
           }
         }
 
-        function checkHangUp(downTime) {
+        function checkForHangUp(downTimeIn) {
+          const downTime = downTimeIn.slice(); // make copy of array
           return () => {
-            if (downTime === lastDown) store.hangUp();
+            if (diffHrTimes(lastUp, downTime) > 0) {
+              // downTime is after lastUp -> phone is hung up
+              store.hangUp();
+            }
           }
         }
 
         my.button.on('push', function() {
           // finishing a pulse or receiver was lifted off hook
+          lastUp = process.hrtime();
           store.lineUp();
           if (!lastDown) {
             // lastDown is not set - this is the first time phone is taken off hook
@@ -58,29 +77,20 @@ Cylon.robot({
             return;
           }
 
-          if (lastDown[0] == 0) {
-            // down tick was w/in 1 second - valid pulse
-            setTimeout(checkPulse(++pulseCount), pulseTimeout);
+          const downDifNs = hrtToNs(process.hrtime(lastDown));
+          if (downDifNs < pulseTimeoutNs) {
+            // last down tick was w/in pulse timeout - valid pulse
+            setTimeout(checkPulse(++pulseCount), pulseFinishTimeout);
           } else {
             store.offHook();
           }
-
-
-          // // set last up so we can keep track if the phone is being pulled off the receiver,
-          // // or if this is actually a pulse
-          // lastUp = process.hrtime();
         });
 
         my.button.on('release', function() {
             // starting a pulse or receiver is hung up
             store.lineDown();
             lastDown = process.hrtime();
-            setTimeout(checkHangUp(lastDown), pulseTimeout);
-
-
-            // if (process.hrtime(lastUp)[0] > 1) return;
-            // pulseCount++;
-            // setTimeout(checkPulse(pulseCount), pulseTimeout);
+            setTimeout(checkForHangUp(lastDown), pulseTimeout);
         });
     }
 }).start();

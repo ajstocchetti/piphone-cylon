@@ -45,8 +45,10 @@ function lineDown() {
 }
 
 function hangUp() {
-  if (store.phoneState == 'closed') store.lineState = 'hung-up';
-  else logger.warn('Cannot set phone hung up when line is not closed');
+  if (store.phoneState == 'closed') {
+    store.lineState = 'hung-up';
+    clearDialed();
+  } else logger.warn('Cannot set phone hung up when line is not closed');
 }
 
 function offHook() {
