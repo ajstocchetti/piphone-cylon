@@ -33,8 +33,8 @@ Cylon.robot({
         function checkPulse(onRelease) {
           return () => {
             if (onRelease === pulseCount) {
-              store.dial(pulseCount);
-              logger.debug(store.getDialed());
+              const dialed = store.dial(pulseCount);
+              logger.debug(dialed);
               pulseCount = 0;
             }
           }

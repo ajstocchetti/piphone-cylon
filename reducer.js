@@ -55,10 +55,10 @@ function getLineState() {
 
 
 function getLastUp() {
-  return store.lastUp;
+  return store.lastUp.slice();
 }
 function getLastDown() {
-  return store.lastDown;
+  return store.lastDown.slice();
 }
 
 
