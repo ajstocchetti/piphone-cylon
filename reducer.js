@@ -1,57 +1,83 @@
 'use strict';
+const config = require('./config');
 const logger = require('./logger');
+const tu = require('./hrtime-utils');
 
+const pulseTimeoutNs = config.pulseTimeout * 1e6; // nanoseconds
 const store = {
-  phoneState: undefined, // 'open' or 'closed'
-  lineState: undefined, // 'pulsing-up', 'pulsing-down', 'hung-up', 'off-hook'
+  lineState: undefined, // 'open' or 'closed'
   dialed: [],
+  lastUp: null,
+  lastDown: null,
 };
 
 module.exports = {
-  getPhoneState,
-  getLineState,
-  getDialed,
   clearDialed,
   dial,
-  lineUp,
+  getDialed,
+  getLastDown,
+  getLastUp,
+  getLineState,
+  getPhoneState,
   lineDown,
-  hangUp,
-  offHook,
-}
+  lineUp,
+};
 
-// getters
-function getPhoneState() { return store.phoneState; }
-function getLineState() { return store.lineState; }
-function getDialed() { return store.dialed.slice(); } // call slice to make a copy
-
-// setters
-function clearDialed() {
-  store.dialed.length = 0;
-}
 
 function dial(num) {
   // TODO: validate input
   store.dialed.push(num);
+  return getDialed();
 }
+function clearDialed() {
+  store.dialed.length = 0;
+  return getDialed();
+}
+function getDialed() {
+  // call slice to make a copy
+  return store.dialed.slice();
+}
+
 
 function lineUp() {
+  store.lastUp = process.hrtime();
   store.lineState = 'open';
-  store.phoneState = 'pulsing-up';
+  return getLastUp();
 }
-
 function lineDown() {
+  store.lastDown = process.hrtime();
   store.lineState = 'closed';
-  store.phoneState = 'pulsing-down';
+  return getLastDown();
+}
+function getLineState() {
+  return store.lineState;
 }
 
-function hangUp() {
-  if (store.phoneState == 'closed') {
-    store.lineState = 'hung-up';
-    clearDialed();
-  } else logger.warn('Cannot set phone hung up when line is not closed');
+
+function getLastUp() {
+  return store.lastUp;
+}
+function getLastDown() {
+  return store.lastDown;
 }
 
-function offHook() {
-  if (store.phoneState == 'open') store.lineState = 'off-hook';
-  else logger.warn('Cannot set phone off-hook when line is not open');
+
+function getPhoneState() {
+  // initializing
+  // pulsing-up, off-hook
+  // pulsing-down, hung-up
+
+  const line  = getLineState();
+  if (!line) {
+    // line state is not set - nothng has happened yet
+    return 'initializing';
+  }
+
+  if (line == 'open') {
+    // TODO: consider checking if dialed has length -> dialing (as opposed to off-hook)
+    return tu.hrtToNs(process.hrtime(getLastUp())) < pulseTimeoutNs ? 'pulsing-up' : 'off-hook';
+  } else {
+    // line is closed
+    return tu.hrtToNs(process.hrtime(getLastDown())) < pulseTimeoutNs ? 'pulsing-down' : 'hung-up';
+  }
 }
