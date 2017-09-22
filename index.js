@@ -47,11 +47,11 @@ Cylon.robot({
 
         my.button.on('release', function() {
           // finishing a pulse or receiver was lifted off hook
-          store.lineUp();
-
-          if (store.getPhoneState() == 'pulsing-up') {
+          if (store.getPhoneState() == 'pulsing-down') {
+            // line was recently broken. this counts as a complete pulse
             setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
           }
+          store.lineUp();
         });
     }
 }).start();
