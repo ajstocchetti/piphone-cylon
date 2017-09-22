@@ -4,7 +4,16 @@ const config = require('./config');
 const logger = require('./logger');
 const store = require('./reducer');
 
-Cylon.robot({
+
+function gracefulExit() {
+    logger.info('Shutting down');
+//    if (robot) robot.halt();
+}
+
+process.on('SIGINT', process.exit);
+process.on('exit', gracefulExit);
+
+const robot = Cylon.robot({
     connections: {
         raspi: {
             adaptor: 'raspi'
@@ -61,4 +70,7 @@ Cylon.robot({
           store.lineUp();
         });
     }
-}).start();
+});
+
+robot.start();
+
