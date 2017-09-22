@@ -41,16 +41,17 @@ Cylon.robot({
         }
 
         my.button.on('push', function() {
-          // finishing a pulse or receiver was lifted off hook
-          store.lineUp();
-          if (store.getPhoneState() == 'pulsing-up') {
-            setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
-          }
+          // starting a pulse or receiver is hung up
+          store.lineDown();
         });
 
         my.button.on('release', function() {
-            // starting a pulse or receiver is hung up
-            store.lineDown();
+          // finishing a pulse or receiver was lifted off hook
+          store.lineUp();
+
+          if (store.getPhoneState() == 'pulsing-up') {
+            setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
+          }
         });
     }
 }).start();
