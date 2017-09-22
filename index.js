@@ -40,9 +40,16 @@ Cylon.robot({
           }
         }
 
+        function checkHangUp() {
+          if (store.getPhoneState() == 'hung-up') {
+            store.clearDialed();
+          }
+        }
+
         my.button.on('push', function() {
           // starting a pulse or receiver is hung up
           store.lineDown();
+          setTimeout(checkHangUp, config.pulseFinishTimeout);
         });
 
         my.button.on('release', function() {
