@@ -43,7 +43,7 @@ Cylon.robot({
         my.button.on('push', function() {
           // finishing a pulse or receiver was lifted off hook
           store.lineUp();
-          if (store.getPhoneState() == 'pulsing-up')
+          if (store.getPhoneState() == 'pulsing-up') {
             setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
           }
         });
