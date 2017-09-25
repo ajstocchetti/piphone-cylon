@@ -1,5 +1,4 @@
 'use strict';
-const EventEmitter = require('events');
 const config = require('./config');
 const logger = require('./logger');
 const tu = require('./hrtime-utils');
@@ -7,17 +6,12 @@ const tu = require('./hrtime-utils');
 const pulseTimeoutNs = config.pulseTimeout * 1e6; // nanoseconds
 const store = {
   lineState: undefined, // 'open' or 'closed'
-  dialed: [],
   lastUp: null,
   lastDown: null,
 };
-const dialEmitter = new EventEmitter();
 
 
 module.exports = {
-  clearDialed,
-  dial,
-  getDialed,
   getLastDown,
   getLastUp,
   getLineState,
@@ -25,27 +19,6 @@ module.exports = {
   lineDown,
   lineUp,
 };
-
-
-function dial(num) {
-  // TODO: validate input
-  store.dialed.push(num);
-  emitDialed();
-  return getDialed();
-}
-function clearDialed() {
-  store.dialed.length = 0;
-  emitDialed();
-  return getDialed();
-}
-function emitDialed() {
-  const dialed = getDialed();
-  dialEmitter.emit('dial', dialed);
-}
-function getDialed() {
-  // call slice to make a copy
-  return store.dialed.slice();
-}
 
 
 function lineUp() {

@@ -1,9 +1,9 @@
 'use strict';
 const Cylon = require('cylon');
 const config = require('./config');
-const listener = require('./listener');
+const dialer = require('./dial-queue').ee;
+const line = require('./line-state');
 const logger = require('./logger');
-const store = require('./reducer');
 
 
 // function gracefulExit() {
@@ -37,36 +37,14 @@ const robot = Cylon.robot({
         // setTimeout(my.led.toggle, 10000)
         //  every((1).second(), my.led.toggle);
 
-        let pulseCount = 0;
-
-        function checkPulse(onRelease) {
-          return () => {
-            if (onRelease === pulseCount) {
-              const dialed = store.dial(pulseCount);
-              pulseCount = 0;
-            }
-          }
-        }
-
-        function checkHangUp() {
-          if (store.getPhoneState() == 'hung-up') {
-            store.clearDialed();
-          }
-        }
-
         my.button.on('push', function() {
           // starting a pulse or receiver is hung up
-          store.lineDown();
-          setTimeout(checkHangUp, config.pulseFinishTimeout);
+          line.lineDown();
         });
 
         my.button.on('release', function() {
           // finishing a pulse or receiver was lifted off hook
-          if (store.getPhoneState() == 'pulsing-down') {
-            // line was recently broken. this counts as a complete pulse
-            setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
-          }
-          store.lineUp();
+          line.lineUp();
         });
     }
 });
