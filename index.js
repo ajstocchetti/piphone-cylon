@@ -43,7 +43,7 @@ const robot = Cylon.robot({
         });
 
         dialer.on('dial', dialArr => {
-          const lastDial = dialArr.slice();
+          const lastDial = dialArr.slice(-1)[0];
           if (lastDial == 1) my.led1.toggle();
           if (lastDial == 2) my.led2.toggle();
           if (lastDial == 3) my.led3.toggle();
