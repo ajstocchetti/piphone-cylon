@@ -1,5 +1,6 @@
 'use strict';
 const config = require('./config');
+const dialer = require('./dial-queue');
 const logger = require('./logger');
 const tu = require('./hrtime-utils');
 
@@ -9,6 +10,7 @@ const store = {
   lastUp: null,
   lastDown: null,
 };
+let pulseCount = 0;
 
 
 module.exports = {
@@ -22,13 +24,20 @@ module.exports = {
 
 
 function lineUp() {
+  // finishing a pulse or receiver was lifted off hook
+  if (line.getPhoneState() == 'pulsing-down') {
+    // line was recently broken. this counts as a complete pulse
+    setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
+  }
   store.lastUp = process.hrtime();
   store.lineState = 'open';
   return getLastUp();
 }
 function lineDown() {
+  // starting a pulse or receiver is hung up
   store.lastDown = process.hrtime();
   store.lineState = 'closed';
+  setTimeout(checkHangUp, config.pulseFinishTimeout);
   return getLastDown();
 }
 function getLineState() {
@@ -61,5 +70,21 @@ function getPhoneState() {
   } else {
     // line is closed
     return tu.hrtToNs(process.hrtime(getLastDown())) < pulseTimeoutNs ? 'pulsing-down' : 'hung-up';
+  }
+}
+
+// counting pulses
+function checkPulse(onRelease) {
+  return () => {
+    if (onRelease === pulseCount) {
+      const dialed = dialer.dial(pulseCount);
+      pulseCount = 0;
+    }
+  }
+}
+
+function checkHangUp() {
+  if (line.getPhoneState() == 'hung-up') {
+    dialer.clearDialed();
   }
 }

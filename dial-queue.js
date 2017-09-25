@@ -1,7 +1,7 @@
 'use strict';
 const EventEmitter = require('events');
 
-const dialed: [];
+const dialed = [];
 const dialEmitter = new EventEmitter();
 
 module.exports = {
