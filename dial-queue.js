@@ -24,12 +24,11 @@ function dial(num) {
 }
 
 function clearDialed() {
-  store.dialed.length = 0;
+  dialed.length = 0;
   emitDialed();
   return getDialed();
 }
 
 function emitDialed() {
-  const dialed = getDialed();
-  dialEmitter.emit('dial', dialed);
+  dialEmitter.emit('dial', getDialed());
 }

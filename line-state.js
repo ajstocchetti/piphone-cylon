@@ -25,7 +25,7 @@ module.exports = {
 
 function lineUp() {
   // finishing a pulse or receiver was lifted off hook
-  if (line.getPhoneState() == 'pulsing-down') {
+  if (getPhoneState() == 'pulsing-down') {
     // line was recently broken. this counts as a complete pulse
     setTimeout(checkPulse(++pulseCount), config.pulseFinishTimeout);
   }

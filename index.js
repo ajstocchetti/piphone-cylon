@@ -1,9 +1,8 @@
 'use strict';
 const Cylon = require('cylon');
-const config = require('./config');
 const dialer = require('./dial-queue').ee;
 const line = require('./line-state');
-const logger = require('./logger');
+// const logger = require('./logger');
 
 
 // function gracefulExit() {
@@ -20,14 +19,10 @@ const robot = Cylon.robot({
         }
     },
     devices: {
-        led: {
-            driver: 'led',
-            pin: 11
-        },
-        button: {
-            driver: 'button',
-            pin: 16
-        }
+        led1: { driver: 'led', pin: 11 },
+        led2: { driver: 'led', pin: 13 },
+        led3: { driver: 'led', pin: 15 },
+        phoneLine: { driver: 'button', pin: 16 },
     },
     work: function(my) {
         // my.led.turnOn();
@@ -37,14 +32,18 @@ const robot = Cylon.robot({
         // setTimeout(my.led.toggle, 10000)
         //  every((1).second(), my.led.toggle);
 
-        my.button.on('push', function() {
+        my.phoneLine.on('push', function() {
           // starting a pulse or receiver is hung up
           line.lineDown();
         });
 
-        my.button.on('release', function() {
+        my.phoneLine.on('release', function() {
           // finishing a pulse or receiver was lifted off hook
           line.lineUp();
+        });
+
+        dialer.on('dial', dialArr => {
+          console.log(dialArr);
         });
     }
 });
