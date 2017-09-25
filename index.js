@@ -1,17 +1,17 @@
 'use strict';
 const Cylon = require('cylon');
 const config = require('./config');
+const listener = require('./listener');
 const logger = require('./logger');
 const store = require('./reducer');
 
 
-function gracefulExit() {
-    logger.info('Shutting down');
-//    if (robot) robot.halt();
-}
-
-process.on('SIGINT', process.exit);
-process.on('exit', gracefulExit);
+// function gracefulExit() {
+//     logger.info('Shutting down');
+// }
+//
+// process.on('SIGINT', process.exit);
+// process.on('exit', gracefulExit);
 
 const robot = Cylon.robot({
     connections: {
@@ -43,7 +43,6 @@ const robot = Cylon.robot({
           return () => {
             if (onRelease === pulseCount) {
               const dialed = store.dial(pulseCount);
-              logger.debug(dialed);
               pulseCount = 0;
             }
           }
@@ -73,4 +72,3 @@ const robot = Cylon.robot({
 });
 
 robot.start();
-
