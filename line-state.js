@@ -84,7 +84,7 @@ function checkPulse(onRelease) {
 }
 
 function checkHangUp() {
-  if (line.getPhoneState() == 'hung-up') {
+  if (getPhoneState() == 'hung-up') {
     dialer.clearDialed();
   }
 }
